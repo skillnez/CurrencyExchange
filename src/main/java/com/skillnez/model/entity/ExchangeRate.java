@@ -67,10 +67,10 @@ public class ExchangeRate {
     @Override
     public String toString() {
         return "ExchangeRate{" +
-                "id=" + id +
-                ", baseCurrencyId=" + baseCurrencyId +
-                ", targetCurrencyId=" + targetCurrencyId +
-                ", rate=" + rate +
-                '}';
+               "id=" + id +
+               ", baseCurrencyId=" + baseCurrencyId +
+               ", targetCurrencyId=" + targetCurrencyId +
+               ", rate=" + rate +
+               '}';
     }
 }

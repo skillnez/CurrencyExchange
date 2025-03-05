@@ -1,7 +1,7 @@
-package com.skillnez.repository.dao;
+package com.skillnez.dao;
 
-import com.skillnez.model.entity.Currency;
 import com.skillnez.exceptions.DaoException;
+import com.skillnez.model.entity.Currency;
 import com.skillnez.utils.ConnectionManager;
 
 import java.sql.Connection;
@@ -12,31 +12,37 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
 public class CurrencyDao implements Dao<Integer, Currency> {
 
-    private final static String SAVE_SQL = """
+    private static final Logger logger = LogManager.getLogger(CurrencyDao.class);
+
+    private static final String SAVE_SQL = """
             INSERT INTO Currencies (Code, FullName, Sign)
             VALUES (?, ?, ?)
             """;
-    private final static String DELETE_SQL = """
+    private static final String DELETE_SQL = """
             DELETE FROM Currencies
             WHERE ID = ?
             """;
-    private final static String FIND_ALL_SQL = """
-            SELECT * FROM Currencies
+    private static final String FIND_ALL_SQL = """
+            SELECT * FROM Currenciessss
             """;
-    private final static String FIND_BY_ID_SQL = """
+    private static final String FIND_BY_ID_SQL = """
             SELECT * FROM Currencies
             WHERE ID = ?
             """;
 
-    private final static String UPDATE_SQL = """
+    private static final String UPDATE_SQL = """
             UPDATE Currencies
             SET Code = ?, FullName = ?, Sign = ?
             WHERE ID = ?
             """;
     //сделал класс синглтоном
-    private final static CurrencyDao INSTANCE = new CurrencyDao();
+    private static final CurrencyDao INSTANCE = new CurrencyDao();
 
     public CurrencyDao() {
     }
@@ -56,7 +62,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
 
     public Currency save(Currency currency) {
         try (Connection connection = ConnectionManager.open();
-             var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS);) {
+             var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
             statement.setString(3, currency.getSign());
@@ -69,7 +75,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             //Заполняем у валюты ID, который ранее был автоматически сгенерирован
             return currency;
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
@@ -80,11 +87,12 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
-    public List<Currency> findALl() {
+    public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
         try (Connection connection = ConnectionManager.open();
              var statement = connection.prepareStatement(FIND_ALL_SQL)) {
@@ -95,7 +103,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
                 );
             }
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
         return currencies;
     }
@@ -111,7 +120,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             }
             return Optional.ofNullable(currency);
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
@@ -125,7 +135,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 }

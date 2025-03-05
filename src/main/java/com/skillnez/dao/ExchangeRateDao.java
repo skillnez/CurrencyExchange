@@ -1,8 +1,10 @@
-package com.skillnez.repository.dao;
+package com.skillnez.dao;
 
-import com.skillnez.model.entity.ExchangeRate;
 import com.skillnez.exceptions.DaoException;
+import com.skillnez.model.entity.ExchangeRate;
 import com.skillnez.utils.ConnectionManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
+
+    private static final Logger logger = LogManager.getLogger(ExchangeRateDao.class);
 
     private final static String DELETE_SQL = """
             DELETE FROM ExchangeRates
@@ -60,12 +64,13 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             statement.setInt(4, exchangeRate.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
     @Override
-    public List<ExchangeRate> findALl() {
+    public List<ExchangeRate> findAll() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(FIND_ALL_SQL)) {
@@ -76,7 +81,8 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
                 );
             }
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
         return exchangeRates;
     }
@@ -88,7 +94,8 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             statement.setInt(1, id);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
@@ -106,7 +113,8 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             }
             return exchangeRate;
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 
@@ -122,7 +130,8 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             }
             return Optional.ofNullable(exchangeRate);
         } catch (SQLException e) {
-            throw new DaoException(e);
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.skillnez.controller.servlets;
+package com.skillnez.controller;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
