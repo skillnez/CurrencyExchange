@@ -1,8 +1,10 @@
 package com.skillnez.service;
 
+import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.model.dto.CurrencyDto;
 import com.skillnez.dao.CurrencyDao;
+import com.skillnez.model.entity.Currency;
 
 import java.util.List;
 
@@ -25,5 +27,10 @@ public class CurrencyService {
                 currency.getCode(),
                 currency.getFullName(),
                 currency.getSign())).toList();
+    }
+
+    public CurrencyDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
+            Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
+            return new CurrencyDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
     }
 }

@@ -1,19 +1,16 @@
 package com.skillnez.dao;
 
+import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.model.entity.Currency;
 import com.skillnez.utils.ConnectionManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 
 public class CurrencyDao implements Dao<Integer, Currency> {
@@ -29,7 +26,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             WHERE ID = ?
             """;
     private static final String FIND_ALL_SQL = """
-            SELECT * FROM Currenciessss
+            SELECT * FROM Currencies
             """;
     private static final String FIND_BY_ID_SQL = """
             SELECT * FROM Currencies
@@ -40,6 +37,11 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             UPDATE Currencies
             SET Code = ?, FullName = ?, Sign = ?
             WHERE ID = ?
+            """;
+
+    private static final String FIND_BY_CODE_SQL = """
+            SELECT * FROM Currencies
+            WHERE Code = ?
             """;
     //сделал класс синглтоном
     private static final CurrencyDao INSTANCE = new CurrencyDao();
@@ -134,6 +136,24 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             statement.setInt(4, currency.getId());
             return statement.executeUpdate() > 0;
 
+        } catch (SQLException e) {
+            logger.error("Error executing SQL query: {}", e.getMessage(), e);
+            throw new DaoException("Error executing SQL query", e);
+        }
+    }
+
+    public Optional<Currency> getCurrencyByCode(String code) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_BY_CODE_SQL)) {
+            statement.setString(1, code);
+            var resultSet = statement.executeQuery();
+            Currency currency = null;
+            if (resultSet.next()) {
+                currency = buildCurrency(resultSet);
+            } else {
+                throw new CurrencyNotFoundException("Error executing SQL query");
+            }
+            return Optional.of(currency);
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
             throw new DaoException("Error executing SQL query", e);
