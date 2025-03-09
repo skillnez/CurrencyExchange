@@ -1,6 +1,5 @@
 package com.skillnez.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.skillnez.mapper.JsonMapper;
 import com.skillnez.model.dto.CurrencyRequestDto;
 import com.skillnez.model.dto.CurrencyResponseDto;
@@ -13,7 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
@@ -23,9 +21,9 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-           resp.getWriter().write(jsonMapper.listToJson(currencyService.findAll()));
-           resp.getWriter().flush();
-           resp.getWriter().close();
+        resp.getWriter().write(jsonMapper.listToJson(currencyService.findAll()));
+        resp.getWriter().flush();
+        resp.getWriter().close();
     }
 
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {

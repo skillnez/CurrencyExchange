@@ -23,28 +23,28 @@ public class ExchangeRate {
         return id;
     }
 
-    public int getBaseCurrencyId() {
-        return baseCurrencyId;
-    }
-
-    public int getTargetCurrencyId() {
-        return targetCurrencyId;
-    }
-
-    public BigDecimal getRate() {
-        return rate;
-    }
-
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getBaseCurrencyId() {
+        return baseCurrencyId;
     }
 
     public void setBaseCurrencyId(int baseCurrencyId) {
         this.baseCurrencyId = baseCurrencyId;
     }
 
+    public int getTargetCurrencyId() {
+        return targetCurrencyId;
+    }
+
     public void setTargetCurrencyId(int targetCurrencyId) {
         this.targetCurrencyId = targetCurrencyId;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
     }
 
     public void setRate(BigDecimal rate) {

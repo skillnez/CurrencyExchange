@@ -1,19 +1,18 @@
 package com.skillnez.filter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.skillnez.exceptions.CurrencyAlreadyExistException;
 import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
-import com.skillnez.mapper.JsonMapper;
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 
 @WebFilter("/*")
 public class ErrorFilter extends HttpFilter {
@@ -21,7 +20,7 @@ public class ErrorFilter extends HttpFilter {
     String errorMessage;
 
     @Override
-    public void doFilter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException , ServletException {
+    public void doFilter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException {
         try {
             chain.doFilter(req, resp);
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -37,9 +36,11 @@ public class ErrorFilter extends HttpFilter {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             errorMessage = "Currency not found";
             writeError(resp, errorMessage);
-        }
-        catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeError(resp, e.getMessage());
+        } catch (CurrencyAlreadyExistException e) {
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
             writeError(resp, e.getMessage());
         }
     }

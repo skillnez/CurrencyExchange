@@ -4,11 +4,12 @@ public class CurrencyNotFoundException extends RuntimeException {
     public CurrencyNotFoundException(String errorMessage, Throwable cause) {
         super(errorMessage, cause);
     }
-    public CurrencyNotFoundException(){
+
+    public CurrencyNotFoundException() {
         super();
     }
 
-    public CurrencyNotFoundException(String errorMessage){
+    public CurrencyNotFoundException(String errorMessage) {
         super(errorMessage);
     }
 }

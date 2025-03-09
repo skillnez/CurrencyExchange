@@ -1,13 +1,12 @@
 package com.skillnez.service;
 
+import com.skillnez.dao.CurrencyDao;
 import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.model.dto.CurrencyRequestDto;
 import com.skillnez.model.dto.CurrencyResponseDto;
-import com.skillnez.dao.CurrencyDao;
 import com.skillnez.model.entity.Currency;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public class CurrencyService {
@@ -32,11 +31,11 @@ public class CurrencyService {
     }
 
     public CurrencyResponseDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
-            Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
-            return new CurrencyResponseDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
+        Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
+        return new CurrencyResponseDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
     }
 
-    public Currency save(CurrencyRequestDto currencyRequestDto) throws DaoException{
+    public Currency save(CurrencyRequestDto currencyRequestDto) throws DaoException {
         String code = currencyRequestDto.code();
         String name = currencyRequestDto.name();
         String sign = currencyRequestDto.sign();

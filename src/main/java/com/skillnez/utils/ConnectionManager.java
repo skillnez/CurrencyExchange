@@ -8,12 +8,12 @@ public class ConnectionManager {
     //вынесли параметры подключения в отдельные константы
     public final static String URL_KEY = "db.url";
 
-    //пустой конструктор
-    private ConnectionManager() {
-    }
-
     static {
         loadDriver();
+    }
+
+    //пустой конструктор
+    private ConnectionManager() {
     }
 
     private static void loadDriver() {
