@@ -2,10 +2,12 @@ package com.skillnez.service;
 
 import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
-import com.skillnez.model.dto.CurrencyDto;
+import com.skillnez.model.dto.CurrencyRequestDto;
+import com.skillnez.model.dto.CurrencyResponseDto;
 import com.skillnez.dao.CurrencyDao;
 import com.skillnez.model.entity.Currency;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class CurrencyService {
@@ -21,16 +23,24 @@ public class CurrencyService {
     }
 
 
-    public List<CurrencyDto> findAll() throws DaoException {
-        return currencyDao.findAll().stream().map(currency -> new CurrencyDto(
+    public List<CurrencyResponseDto> findAll() throws DaoException {
+        return currencyDao.findAll().stream().map(currency -> new CurrencyResponseDto(
                 currency.getId(),
                 currency.getCode(),
                 currency.getFullName(),
                 currency.getSign())).toList();
     }
 
-    public CurrencyDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
+    public CurrencyResponseDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
             Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
-            return new CurrencyDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
+            return new CurrencyResponseDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
+    }
+
+    public Currency save(CurrencyRequestDto currencyRequestDto) throws DaoException{
+        String code = currencyRequestDto.code();
+        String name = currencyRequestDto.name();
+        String sign = currencyRequestDto.sign();
+        Currency currency = new Currency(code, name, sign);
+        return currencyDao.save(currency);
     }
 }

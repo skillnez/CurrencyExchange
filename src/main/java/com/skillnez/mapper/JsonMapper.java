@@ -5,13 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonMapper {
 
+    ObjectMapper mapper = new ObjectMapper();
+
     public String dtoToJson(Object dto) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(dto);
     }
 
     public String listToJson(Object list) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(list); // Преобразование списка в JSON
+    }
+
+    public String stringToJson(String string) throws JsonProcessingException {
+        return mapper.writeValueAsString(string);
     }
 }

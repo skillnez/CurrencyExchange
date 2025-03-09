@@ -2,6 +2,7 @@ package com.skillnez.dao;
 
 import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
+import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.Currency;
 import com.skillnez.utils.ConnectionManager;
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +79,10 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             return currency;
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
-            throw new DaoException("Error executing SQL query", e);
+            if (e instanceof SQLIntegrityConstraintViolationException) {
+                throw new IncorrectRequestException(e.getMessage());
+            } else
+                throw new DaoException("Error executing SQL query", e);
         }
     }
 
