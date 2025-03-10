@@ -40,6 +40,10 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             INSERT INTO ExchangeRates (basecurrencyid, targetcurrencyid, rate)
             VALUES (?, ?, ?)
             """;
+    private final static String FIND_BY_CURRENCY_ID_PAIR_SQL = """
+            SELECT * FROM ExchangeRates
+            WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?
+            """;
 
     public static ExchangeRateDao getInstance() {
         return INSTANCE;
@@ -132,6 +136,22 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
             throw new DaoException("Error executing SQL query", e);
+        }
+    }
+
+    public Optional<ExchangeRate> findByCurrencyIdPair (int baseCurrencyId, int targetCurrencyId) {
+        try (var connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_BY_CURRENCY_ID_PAIR_SQL)) {
+            statement.setInt(1, baseCurrencyId);
+            statement.setInt(2, targetCurrencyId);
+            var resultSet = statement.executeQuery();
+            ExchangeRate exchangeRate = null;
+            if (resultSet.next()) {
+                exchangeRate = buildExchangeRate(resultSet);
+            }
+            return Optional.ofNullable(exchangeRate);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 }

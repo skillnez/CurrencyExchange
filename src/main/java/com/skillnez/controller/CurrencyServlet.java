@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/currencies/*")
+@WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
     private final CurrencyService currencyService = CurrencyService.getINSTANCE();
     private final JsonMapper jsonMapper = new JsonMapper();
