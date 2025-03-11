@@ -7,9 +7,9 @@ import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.mapper.DtoMapper;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
-import com.skillnez.model.entity.Currency;
 import com.skillnez.model.entity.ExchangeRate;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class ExchangeService {
@@ -51,7 +51,32 @@ public class ExchangeService {
                 )).orElseThrow(CurrencyNotFoundException::new);
     }
 
-    private int getCurrencyIdByCode(String currencyCode) throws DaoException {
+    public ExchangeRate save (String baseCurrencyCode, String targetCurrencyCode, String rate) throws DaoException {
+        int baseCurrencyId = getCurrencyIdByCode(baseCurrencyCode);
+        int targetCurrencyId = getCurrencyIdByCode(targetCurrencyCode);
+        try {
+            BigDecimal rateValue = new BigDecimal(rate);
+            return exchangeRateDao.save(new ExchangeRate(baseCurrencyId, targetCurrencyId, rateValue));
+        } catch (NumberFormatException e) {
+            throw new IncorrectRequestException("Incorrect rate request value");
+        }
+    }
+
+    public ExchangeRate update (String rate, ExchangeRateResponseDto exchangeRateResponseDto) throws DaoException {
+        try {
+            BigDecimal rateValue = new BigDecimal(rate);
+            return exchangeRateDao.update(new ExchangeRate(
+                    exchangeRateResponseDto.id(),
+                    exchangeRateResponseDto.baseCurrency().id(),
+                    exchangeRateResponseDto.targetCurrency().id(),
+                    rateValue
+            ));
+        } catch (NumberFormatException e) {
+            throw new IncorrectRequestException("Incorrect rate request value");
+        }
+    }
+
+    public int getCurrencyIdByCode(String currencyCode) throws DaoException {
         return currencyDao.getCurrencyByCode(currencyCode).
                 orElseThrow(CurrencyNotFoundException::new).getId();
     }

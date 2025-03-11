@@ -3,6 +3,7 @@ package com.skillnez.dao;
 import com.skillnez.exceptions.CurrencyAlreadyExistException;
 import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
+import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.Currency;
 import com.skillnez.utils.ConnectionManager;
 import org.apache.logging.log4j.LogManager;
@@ -124,13 +125,17 @@ public class CurrencyDao implements Dao<Integer, Currency> {
         }
     }
 
-    public boolean update(Currency currency) {
+    public Currency update(Currency currency) {
         try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
             statement.setString(3, currency.getSign());
             statement.setInt(4, currency.getId());
-            return statement.executeUpdate() > 0;
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows ==0) {
+                throw new IncorrectRequestException("Can't update Currency");
+            } else
+                return currency;
 
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);

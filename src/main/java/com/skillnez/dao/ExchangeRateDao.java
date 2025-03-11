@@ -1,10 +1,13 @@
 package com.skillnez.dao;
 
+import com.skillnez.exceptions.CurrencyAlreadyExistException;
 import com.skillnez.exceptions.DaoException;
+import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.ExchangeRate;
 import com.skillnez.utils.ConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.sqlite.SQLiteErrorCode;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -59,14 +62,18 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     }
 
     @Override
-    public boolean update(ExchangeRate exchangeRate) {
+    public ExchangeRate update(ExchangeRate exchangeRate) {
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setInt(1, exchangeRate.getBaseCurrencyId());
             statement.setInt(2, exchangeRate.getTargetCurrencyId());
             statement.setBigDecimal(3, exchangeRate.getRate());
             statement.setInt(4, exchangeRate.getId());
-            return statement.executeUpdate() > 0;
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows ==0) {
+                throw new IncorrectRequestException("Can't update ExchangeRate");
+            } else
+                return exchangeRate;
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
             throw new DaoException("Error executing SQL query", e);
@@ -110,7 +117,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             statement.setInt(1, exchangeRate.getBaseCurrencyId());
             statement.setInt(2, exchangeRate.getTargetCurrencyId());
             statement.setBigDecimal(3, exchangeRate.getRate());
-
+            statement.executeUpdate();
             var generatedKeys = statement.getGeneratedKeys();
             if (generatedKeys.next()) {
                 exchangeRate.setId(generatedKeys.getInt(1));
@@ -118,7 +125,10 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             return exchangeRate;
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
-            throw new DaoException("Error executing SQL query", e);
+            if (SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code == 2067) {
+                logger.error("Duplicate ID violation: {}", e.getMessage());
+                throw new CurrencyAlreadyExistException("Exchange rate already exist");
+            } else throw new DaoException("Error executing SQL query", e);
         }
     }
 

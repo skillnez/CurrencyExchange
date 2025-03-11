@@ -18,6 +18,8 @@ public class Validator {
         validateField("sign", requestDto.sign(), 1);
     }
 
+
+
     private void validateField(String fieldName, String fieldValue, int maxLength) {
         if (fieldValue == null || fieldValue.isBlank()) {
             throw new IncorrectRequestException("Field '" + fieldName + "' is empty");

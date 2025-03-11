@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Dao<K, E> {
-    boolean update(E e);
+    E update(E e);
 
     List<E> findAll();
 
