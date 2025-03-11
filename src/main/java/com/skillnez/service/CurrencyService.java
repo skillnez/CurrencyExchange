@@ -25,14 +25,14 @@ public class CurrencyService {
     public List<CurrencyResponseDto> findAll() throws DaoException {
         return currencyDao.findAll().stream().map(currency -> new CurrencyResponseDto(
                 currency.getId(),
-                currency.getCode(),
                 currency.getFullName(),
+                currency.getCode(),
                 currency.getSign())).toList();
     }
 
     public CurrencyResponseDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
         Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
-        return new CurrencyResponseDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
+        return new CurrencyResponseDto(currency.getId(),currency.getFullName(), currency.getCode(), currency.getSign());
     }
 
     public Currency save(CurrencyRequestDto currencyRequestDto) throws DaoException {

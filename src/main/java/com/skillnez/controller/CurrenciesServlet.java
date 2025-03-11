@@ -31,11 +31,11 @@ public class CurrenciesServlet extends HttpServlet {
         var name = req.getParameter("name");
         var sign = req.getParameter("sign");
 
-        CurrencyRequestDto currencyRequestDto = new CurrencyRequestDto(code, name, sign);
+        CurrencyRequestDto currencyRequestDto = new CurrencyRequestDto(name, code, sign);
         validator.validate(currencyRequestDto);
         Currency currency = currencyService.save(currencyRequestDto);
         int id = currency.getId();
-        CurrencyResponseDto currencyResponseDto = new CurrencyResponseDto(id, code, name, sign);
+        CurrencyResponseDto currencyResponseDto = new CurrencyResponseDto(id, name, code, sign);
         resp.getWriter().write(jsonMapper.dtoToJson(currencyResponseDto));
     }
 }

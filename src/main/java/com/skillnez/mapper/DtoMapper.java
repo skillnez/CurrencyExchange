@@ -11,7 +11,7 @@ public class DtoMapper {
 
     public CurrencyResponseDto convertToCurrencyResponseDto (int currencyId) {
         Currency currency = currencyDao.findById(currencyId).orElseThrow(CurrencyNotFoundException::new);
-        return new CurrencyResponseDto(currency.getId(), currency.getCode(), currency.getFullName(), currency.getSign());
+        return new CurrencyResponseDto(currency.getId(), currency.getFullName(), currency.getCode(), currency.getSign());
     }
 
 }
