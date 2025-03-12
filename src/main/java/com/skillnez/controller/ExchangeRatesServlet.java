@@ -8,6 +8,7 @@ import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.model.entity.ExchangeRate;
 import com.skillnez.service.ExchangeService;
+import com.skillnez.utils.Validator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,7 +23,7 @@ public class ExchangeRatesServlet extends HttpServlet {
 
     private final ExchangeService exchangeService = ExchangeService.getInstance();
     private final JsonMapper jsonMapper = new JsonMapper();
-    private final DtoMapper dtoMapper = new DtoMapper();
+    private final Validator validator = new Validator();
 
 
     @Override
@@ -36,8 +37,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         var targetCurrencyCode = req.getParameter("targetCurrencyCode");
         var rate = extractValue(req.getParameter("rate"));
         ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
-        //теперь можно в валидатор пихать
-
+        validator.validate(exchangeRateRequestDto);
         resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.save(exchangeRateRequestDto)));
     }
 
