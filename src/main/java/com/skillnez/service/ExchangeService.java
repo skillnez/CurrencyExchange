@@ -8,6 +8,7 @@ import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.mapper.DtoMapper;
 import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
+import com.skillnez.model.entity.Currency;
 import com.skillnez.model.entity.ExchangeRate;
 
 import java.math.BigDecimal;
@@ -30,8 +31,8 @@ public class ExchangeService {
     public List<ExchangeRateResponseDto> getAllExchangeRates() throws DaoException {
         return exchangeRateDao.findAll().stream().map(exchangeRate -> new ExchangeRateResponseDto(
                 exchangeRate.getId(),
-                dtoMapper.convertToCurrencyResponseDto(exchangeRate.getBaseCurrencyId()),
-                dtoMapper.convertToCurrencyResponseDto(exchangeRate.getTargetCurrencyId()),
+                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
+                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
                 exchangeRate.getRate())).toList();
     }
 
@@ -46,17 +47,23 @@ public class ExchangeService {
         return exchangeRateDao.findByCurrencyIdPair(baseCurrencyId, targetCurrencyId).map(exchangeRate ->
                 new ExchangeRateResponseDto(
                         exchangeRate.getId(),
-                        dtoMapper.convertToCurrencyResponseDto(exchangeRate.getBaseCurrencyId()),
-                        dtoMapper.convertToCurrencyResponseDto(exchangeRate.getTargetCurrencyId()),
+                        dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
+                        dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
                         exchangeRate.getRate()
                 )).orElseThrow(CurrencyNotFoundException::new);
     }
 
-    public ExchangeRate save (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
-            return exchangeRateDao.save(new ExchangeRate(
+    public ExchangeRateResponseDto save (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
+            ExchangeRate exchangeRate = exchangeRateDao.save(new ExchangeRate(
                     getCurrencyIdByCode(exchangeRateRequestDto.baseCurrency()),
                     getCurrencyIdByCode(exchangeRateRequestDto.targetCurrency()),
                     exchangeRateRequestDto.rate()));
+            return new ExchangeRateResponseDto(
+                    exchangeRate.getId(),
+                    dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
+                    dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
+                    exchangeRate.getRate()
+            );
     }
 
 
@@ -77,6 +84,10 @@ public class ExchangeService {
     public int getCurrencyIdByCode(String currencyCode) throws DaoException {
         return currencyDao.getCurrencyByCode(currencyCode).
                 orElseThrow(CurrencyNotFoundException::new).getId();
+    }
+
+    public Currency getCurrencyById (int id) throws DaoException {
+        return currencyDao.findById(id).orElseThrow(CurrencyNotFoundException::new);
     }
 
     private String extractBaseCurrencyCode(String currencyPair) {

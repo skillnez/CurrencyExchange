@@ -38,8 +38,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
         //теперь можно в валидатор пихать
 
-        ExchangeRate exchangeRate = exchangeService.save(exchangeRateRequestDto);
-        resp.getWriter().write(jsonMapper.dtoToJson(dtoMapper.convertToExchangeRateResponseDto(exchangeRate)));
+        resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.save(exchangeRateRequestDto)));
     }
 
     private BigDecimal extractValue (String value) {

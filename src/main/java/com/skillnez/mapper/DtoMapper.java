@@ -11,25 +11,8 @@ import com.skillnez.model.entity.ExchangeRate;
 
 public class DtoMapper {
 
-    private final CurrencyDao currencyDao = CurrencyDao.getInstance();
-
-    public CurrencyResponseDto convertToCurrencyResponseDto (int currencyId) {
-        Currency currency = currencyDao.findById(currencyId).orElseThrow(CurrencyNotFoundException::new);
+    public CurrencyResponseDto convertToCurrencyResponseDto (Currency currency) {
         return new CurrencyResponseDto(currency.getId(), currency.getFullName(), currency.getCode(), currency.getSign());
     }
 
-    public ExchangeRateResponseDto convertToExchangeRateResponseDto (ExchangeRate exchangeRate) {
-        return new ExchangeRateResponseDto(
-                exchangeRate.getId(),
-                convertToCurrencyResponseDto(exchangeRate.getBaseCurrencyId()),
-                convertToCurrencyResponseDto(exchangeRate.getTargetCurrencyId()),
-                exchangeRate.getRate()
-        );
-    }
-
-//    public ExchangeRateRequestDto convertToExchangeRateRequestDto (
-//            String  baseCurrencyCode, String targetCurrencyCode, String rate) {
-//        var currencyPair = baseCurrencyCode + targetCurrencyCode;
-//       int baseCurrencyId =
-//    }
 }
