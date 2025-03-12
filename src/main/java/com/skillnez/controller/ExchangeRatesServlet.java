@@ -1,8 +1,10 @@
 package com.skillnez.controller;
 
+import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.mapper.DtoMapper;
 import com.skillnez.mapper.JsonMapper;
 import com.skillnez.model.dto.CurrencyRequestDto;
+import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.model.entity.ExchangeRate;
 import com.skillnez.service.ExchangeService;
@@ -13,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends HttpServlet {
@@ -31,8 +34,19 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         var baseCurrencyCode = req.getParameter("baseCurrencyCode");
         var targetCurrencyCode = req.getParameter("targetCurrencyCode");
-        var rate = req.getParameter("rate");
-        ExchangeRate exchangeRate = exchangeService.save(baseCurrencyCode, targetCurrencyCode, rate);
+        var rate = extractValue(req.getParameter("rate"));
+        ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
+        //теперь можно в валидатор пихать
+
+        ExchangeRate exchangeRate = exchangeService.save(exchangeRateRequestDto);
         resp.getWriter().write(jsonMapper.dtoToJson(dtoMapper.convertToExchangeRateResponseDto(exchangeRate)));
+    }
+
+    private BigDecimal extractValue (String value) {
+        try {
+            return new BigDecimal(value);
+        } catch (NumberFormatException e) {
+            throw new IncorrectRequestException("Incorrect rate request value");
+        }
     }
 }

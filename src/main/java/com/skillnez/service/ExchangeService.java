@@ -6,6 +6,7 @@ import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.mapper.DtoMapper;
+import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.model.entity.ExchangeRate;
 
@@ -51,16 +52,13 @@ public class ExchangeService {
                 )).orElseThrow(CurrencyNotFoundException::new);
     }
 
-    public ExchangeRate save (String baseCurrencyCode, String targetCurrencyCode, String rate) throws DaoException {
-        int baseCurrencyId = getCurrencyIdByCode(baseCurrencyCode);
-        int targetCurrencyId = getCurrencyIdByCode(targetCurrencyCode);
-        try {
-            BigDecimal rateValue = new BigDecimal(rate);
-            return exchangeRateDao.save(new ExchangeRate(baseCurrencyId, targetCurrencyId, rateValue));
-        } catch (NumberFormatException e) {
-            throw new IncorrectRequestException("Incorrect rate request value");
-        }
+    public ExchangeRate save (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
+            return exchangeRateDao.save(new ExchangeRate(
+                    getCurrencyIdByCode(exchangeRateRequestDto.baseCurrency()),
+                    getCurrencyIdByCode(exchangeRateRequestDto.targetCurrency()),
+                    exchangeRateRequestDto.rate()));
     }
+
 
     public ExchangeRate update (String rate, ExchangeRateResponseDto exchangeRateResponseDto) throws DaoException {
         try {
