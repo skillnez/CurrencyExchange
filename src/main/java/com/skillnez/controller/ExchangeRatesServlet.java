@@ -35,17 +35,9 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         var baseCurrencyCode = req.getParameter("baseCurrencyCode");
         var targetCurrencyCode = req.getParameter("targetCurrencyCode");
-        var rate = extractValue(req.getParameter("rate"));
+        var rate = exchangeService.extractValue(req.getParameter("rate"));
         ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
         validator.validate(exchangeRateRequestDto);
         resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.save(exchangeRateRequestDto)));
-    }
-
-    private BigDecimal extractValue (String value) {
-        try {
-            return new BigDecimal(value);
-        } catch (NumberFormatException e) {
-            throw new IncorrectRequestException("Incorrect rate request value");
-        }
     }
 }

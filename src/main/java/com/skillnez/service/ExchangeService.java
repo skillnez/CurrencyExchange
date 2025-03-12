@@ -29,28 +29,7 @@ public class ExchangeService {
     }
 
     public List<ExchangeRateResponseDto> getAllExchangeRates() throws DaoException {
-        return exchangeRateDao.findAll().stream().map(exchangeRate -> new ExchangeRateResponseDto(
-                exchangeRate.getId(),
-                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
-                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
-                exchangeRate.getRate())).toList();
-    }
-
-    public ExchangeRateResponseDto getExchangeRateByCurrencyPair(String currencyPair) throws DaoException {
-        if (currencyPair.length() != 7) {
-            throw new IncorrectRequestException("Incorrect currency pair request length");
-        }
-        String baseCurrencyCode = extractBaseCurrencyCode(currencyPair);
-        String targetCurrencyCode = extractTargetCurrencyCode(currencyPair);
-        int baseCurrencyId = getCurrencyIdByCode(baseCurrencyCode);
-        int targetCurrencyId = getCurrencyIdByCode(targetCurrencyCode);
-        return exchangeRateDao.findByCurrencyIdPair(baseCurrencyId, targetCurrencyId).map(exchangeRate ->
-                new ExchangeRateResponseDto(
-                        exchangeRate.getId(),
-                        dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
-                        dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
-                        exchangeRate.getRate()
-                )).orElseThrow(CurrencyNotFoundException::new);
+        return exchangeRateDao.findAll().stream().map(this::toExchangeRateDto).toList();
     }
 
     public ExchangeRateResponseDto save (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
@@ -58,24 +37,38 @@ public class ExchangeService {
                     getCurrencyIdByCode(exchangeRateRequestDto.baseCurrency()),
                     getCurrencyIdByCode(exchangeRateRequestDto.targetCurrency()),
                     exchangeRateRequestDto.rate()));
-            return new ExchangeRateResponseDto(
-                    exchangeRate.getId(),
-                    dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
-                    dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
-                    exchangeRate.getRate()
-            );
+            return toExchangeRateDto(exchangeRate);
+    }
+
+    public ExchangeRateResponseDto toExchangeRateDto(ExchangeRate exchangeRate) throws DaoException {
+        return new ExchangeRateResponseDto(
+                exchangeRate.getId(),
+                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getBaseCurrencyId())),
+                dtoMapper.convertToCurrencyResponseDto(getCurrencyById(exchangeRate.getTargetCurrencyId())),
+                exchangeRate.getRate());
     }
 
 
-    public ExchangeRate update (String rate, ExchangeRateResponseDto exchangeRateResponseDto) throws DaoException {
+    public ExchangeRateResponseDto update (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
+        ExchangeRate exchangeRate = exchangeRateDao.findByCurrencyIdPair(
+                getCurrencyIdByCode(exchangeRateRequestDto.baseCurrency()),
+                getCurrencyIdByCode(exchangeRateRequestDto.targetCurrency())).orElseThrow(
+                        () -> new CurrencyNotFoundException("Currency pair not found"));
+        exchangeRate.setRate(exchangeRateRequestDto.rate());
+        return toExchangeRateDto(exchangeRateDao.update(exchangeRate));
+    }
+
+    public ExchangeRateResponseDto getExchangeRateByCodes (String baseCurrencyCode, String targetCurrencyCode) throws DaoException {
+        int baseCurrencyId = getCurrencyIdByCode(baseCurrencyCode);
+        int targetCurrencyId = getCurrencyIdByCode(targetCurrencyCode);
+        ExchangeRate exchangeRate = exchangeRateDao.findByCurrencyIdPair(baseCurrencyId, targetCurrencyId).
+                orElseThrow(() -> new CurrencyNotFoundException("Exchange rate not found"));
+        return toExchangeRateDto(exchangeRate);
+    }
+
+    public BigDecimal extractValue (String value) {
         try {
-            BigDecimal rateValue = new BigDecimal(rate);
-            return exchangeRateDao.update(new ExchangeRate(
-                    exchangeRateResponseDto.id(),
-                    exchangeRateResponseDto.baseCurrency().id(),
-                    exchangeRateResponseDto.targetCurrency().id(),
-                    rateValue
-            ));
+            return new BigDecimal(value);
         } catch (NumberFormatException e) {
             throw new IncorrectRequestException("Incorrect rate request value");
         }
@@ -90,11 +83,19 @@ public class ExchangeService {
         return currencyDao.findById(id).orElseThrow(CurrencyNotFoundException::new);
     }
 
-    private String extractBaseCurrencyCode(String currencyPair) {
-        return currencyPair.substring(1, 4);
+    public String extractBaseCurrencyCode(String currencyPair) {
+        if (currencyPair != null) {
+            return currencyPair.substring(1, 4);
+        } else {
+            throw new IncorrectRequestException("Currency pair is empty");
+        }
     }
 
-    private String extractTargetCurrencyCode(String currencyPair) {
-        return currencyPair.substring(4, 7);
+    public String extractTargetCurrencyCode(String currencyPair) {
+        if (currencyPair != null) {
+            return currencyPair.substring(4, 7);
+        } else {
+            throw new IncorrectRequestException("Currency pair is empty");
+        }
     }
 }

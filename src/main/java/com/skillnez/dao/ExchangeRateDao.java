@@ -70,8 +70,8 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             statement.setBigDecimal(3, exchangeRate.getRate());
             statement.setInt(4, exchangeRate.getId());
             int affectedRows = statement.executeUpdate();
-            if (affectedRows ==0) {
-                throw new IncorrectRequestException("Can't update ExchangeRate");
+            if (affectedRows == 0) {
+                throw new IncorrectRequestException("Nothing to update");
             } else
                 return exchangeRate;
         } catch (SQLException e) {
