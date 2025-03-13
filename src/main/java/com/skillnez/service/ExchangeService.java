@@ -68,9 +68,13 @@ public class ExchangeService {
 
     public BigDecimal extractValue (String value) {
         try {
-            return new BigDecimal(value);
+            String rateFromParameter = value.replace("rate=", "");
+            rateFromParameter = rateFromParameter.replace(",", ".");
+            return new BigDecimal(rateFromParameter);
         } catch (NumberFormatException e) {
             throw new IncorrectRequestException("Incorrect rate request value");
+        } catch (NullPointerException e) {
+            throw new IncorrectRequestException("Rate not extracted from request");
         }
     }
 

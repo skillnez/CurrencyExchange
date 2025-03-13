@@ -26,6 +26,15 @@ public class ExchangeRateServlet extends HttpServlet {
     private final DtoMapper dtoMapper = new DtoMapper();
 
     @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        if ("PATCH".equals(req.getMethod())) {
+            doPatch(req, resp);
+        } else {
+            super.service(req, resp);
+        }
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         var baseCurrencyCode = exchangeService.extractBaseCurrencyCode(req.getPathInfo());
         var targetCurrencyCode = exchangeService.extractTargetCurrencyCode(req.getPathInfo());
@@ -36,9 +45,12 @@ public class ExchangeRateServlet extends HttpServlet {
 
     @Override
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
         var baseCurrencyCode = exchangeService.extractBaseCurrencyCode(req.getPathInfo());
         var targetCurrencyCode = exchangeService.extractTargetCurrencyCode(req.getPathInfo());
-        var rate = exchangeService.extractValue(req.getParameter("rate"));
+        String parameter = req.getReader().readLine();
+        var rate = exchangeService.extractValue(parameter);
+
         ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
         validator.validate(exchangeRateRequestDto);
         resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.update(exchangeRateRequestDto)));

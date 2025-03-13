@@ -20,6 +20,7 @@ public class CharsetFilter implements Filter {
         //обозначаем что будем делать в фильтре на запрос и ответ
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=utf-8");
 
         //здесь можно передать по цепочке в следующий фильтр. Если этой стройки не будет написано,
         //обработка прервется на этом фильтре. Порядок обработки задается в web.xml.
