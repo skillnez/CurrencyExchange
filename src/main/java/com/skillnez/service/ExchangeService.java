@@ -3,6 +3,7 @@ package com.skillnez.service;
 import com.skillnez.dao.CurrencyDao;
 import com.skillnez.dao.ExchangeRateDao;
 import com.skillnez.exceptions.CurrencyNotFoundException;
+import com.skillnez.exceptions.ExchangeRateNotFoundException;
 import com.skillnez.mapper.DtoMapper;
 import com.skillnez.model.dto.ExchangeRequestDto;
 import com.skillnez.model.dto.ExchangeResponseDto;
@@ -12,6 +13,7 @@ import com.skillnez.model.entity.ExchangeRate;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Optional;
 
 public class ExchangeService {
 
@@ -28,23 +30,37 @@ public class ExchangeService {
     }
 
     public ExchangeResponseDto exchange(ExchangeRequestDto exchangeDto) {
-        BigDecimal rate;
-        BigDecimal convertedAmount;
-        ExchangeRate exchangeRate =
-                exchangeRateDao.findExchangePairByCurrencyCodes(exchangeDto.baseCurrencyCode(), exchangeDto.targetCurrencyCode())
-                        .orElseThrow(() -> new CurrencyNotFoundException("Exchange rate not found"));
-//        //Сценарий прямого курса
-        rate = exchangeRate.getRate();
-        convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
-        //сценарий обратного курса
-//        rate = getReverseRate(exchangeRate);
-//        convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
-        //сценарий кросс курса
+        BigDecimal rate = BigDecimal.ZERO;
+        BigDecimal convertedAmount =BigDecimal.ZERO;
+        Optional<ExchangeRate> exchangeRate =
+                exchangeRateDao.findExchangePairByCurrencyCodes(exchangeDto.baseCurrencyCode(), exchangeDto.targetCurrencyCode());
+        Optional<ExchangeRate> reverseRate =
+                exchangeRateDao.findExchangePairByCurrencyCodes(exchangeDto.targetCurrencyCode(), exchangeDto.baseCurrencyCode());
+        Optional<ExchangeRate> usdToBase =
+                exchangeRateDao.findExchangePairByCurrencyCodes("USD", exchangeDto.baseCurrencyCode());
+        Optional<ExchangeRate> usdToTarget =
+                exchangeRateDao.findExchangePairByCurrencyCodes("USD", exchangeDto.targetCurrencyCode());
+
+        if (exchangeRate.isPresent()) {
+            rate = exchangeRate.orElseThrow(ExchangeRateNotFoundException::new)
+                    .getRate()
+                    .setScale(6, RoundingMode.HALF_EVEN);
+            convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
+        }
+        if (exchangeRate.isEmpty() & reverseRate.isPresent()) {
+            rate = getReverseRate(reverseRate.orElseThrow(ExchangeRateNotFoundException::new));
+            convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
+        }
+        if (usdToBase.isPresent() & usdToTarget.isPresent() & exchangeRate.isEmpty() & reverseRate.isEmpty()) {
+            rate = getCrossRate(usdToBase.get(), usdToTarget.get());
+            convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
+        }
+
         return new ExchangeResponseDto(
-                currencyDao.findById(exchangeRate.getBaseCurrencyId())
+                currencyDao.getCurrencyByCode(exchangeDto.baseCurrencyCode())
                         .map(dtoMapper::convertToCurrencyResponseDto)
                         .orElseThrow(CurrencyNotFoundException::new),
-                currencyDao.findById(exchangeRate.getTargetCurrencyId())
+                currencyDao.getCurrencyByCode(exchangeDto.targetCurrencyCode())
                         .map(dtoMapper::convertToCurrencyResponseDto)
                         .orElseThrow(CurrencyNotFoundException::new),
                 rate,
@@ -54,15 +70,10 @@ public class ExchangeService {
     }
 
 
-//    public ExchangeResponseDto exchangeByCrossRate (ExchangeRequestDto exchangeDto) {
-//        Currency primaryCurrency = currencyDao.getCurrencyByCode("USD").orElseThrow(() ->
-//                new CurrencyNotFoundException("Currency: " + exchangeDto.baseCurrencyCode() + " not found"));
-//        Currency baseCurrency = currencyDao.getCurrencyByCode(exchangeDto.baseCurrencyCode()).orElseThrow(() ->
-//                new CurrencyNotFoundException("Currency: " + exchangeDto.baseCurrencyCode() + " not found"));
-//        Currency targetCurrency = currencyDao.getCurrencyByCode(exchangeDto.targetCurrencyCode()).orElseThrow(() ->
-//                new CurrencyNotFoundException("Currency: " + exchangeDto.targetCurrencyCode() + " not found"));
-//
-//    }
+    public BigDecimal getCrossRate (ExchangeRate usdToTarget, ExchangeRate usdToBase) {
+        return usdToBase.getRate()
+                .divide(usdToTarget.getRate(), MathContext.DECIMAL64).setScale(6, RoundingMode.HALF_EVEN);
+    }
 
 
     private BigDecimal getReverseRate(ExchangeRate exchangeRate) {
