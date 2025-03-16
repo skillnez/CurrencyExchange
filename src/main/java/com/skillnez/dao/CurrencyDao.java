@@ -52,7 +52,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     //сделал класс синглтоном
     private static final CurrencyDao INSTANCE = new CurrencyDao();
 
-    public CurrencyDao() {
+    private CurrencyDao() {
     }
 
     private static Currency buildCurrency(ResultSet resultSet) throws SQLException {

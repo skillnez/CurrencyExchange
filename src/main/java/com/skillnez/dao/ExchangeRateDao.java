@@ -47,6 +47,24 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             SELECT * FROM ExchangeRates
             WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?
             """;
+    private final static String FIND_BY_CURRENCY_CODES_PAIR_SQL = """
+            SELECT e.ID,\s
+            e.BaseCurrencyId,\s
+            e.TargetCurrencyId,\s
+            b.ID,\s
+            b.Code,\s
+            t.ID,\s
+            t.Code,\s
+            e.Rate
+            FROM ExchangeRates e
+            JOIN Currencies b ON e.BaseCurrencyId = b.ID
+            JOIN Currencies t on e.TargetCurrencyId = t.ID
+            WHERE\s
+            (
+                e.BaseCurrencyId = (SELECT c.id FROM Currencies c WHERE c.Code = ?) AND
+                e.TargetCurrencyId = (SELECT c2.id FROM Currencies c2 WHERE c2.Code = ?)
+            )
+           \s""";
 
     public static ExchangeRateDao getInstance() {
         return INSTANCE;
@@ -149,11 +167,27 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
         }
     }
 
-    public Optional<ExchangeRate> findByCurrencyIdPair (int baseCurrencyId, int targetCurrencyId) {
+    public Optional<ExchangeRate> findExchangePairByCurrencyId(int baseCurrencyId, int targetCurrencyId) {
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(FIND_BY_CURRENCY_ID_PAIR_SQL)) {
             statement.setInt(1, baseCurrencyId);
             statement.setInt(2, targetCurrencyId);
+            var resultSet = statement.executeQuery();
+            ExchangeRate exchangeRate = null;
+            if (resultSet.next()) {
+                exchangeRate = buildExchangeRate(resultSet);
+            }
+            return Optional.ofNullable(exchangeRate);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<ExchangeRate> findExchangePairByCurrencyCodes(String baseCode, String targetCode) {
+        try (var connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_BY_CURRENCY_CODES_PAIR_SQL)) {
+            statement.setString(1, baseCode);
+            statement.setString(2, targetCode);
             var resultSet = statement.executeQuery();
             ExchangeRate exchangeRate = null;
             if (resultSet.next()) {
