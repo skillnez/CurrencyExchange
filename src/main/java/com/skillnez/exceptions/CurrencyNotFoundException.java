@@ -6,7 +6,7 @@ public class CurrencyNotFoundException extends RuntimeException {
     }
 
     public CurrencyNotFoundException() {
-        super();
+        super("Currency not found");
     }
 
     public CurrencyNotFoundException(String errorMessage) {

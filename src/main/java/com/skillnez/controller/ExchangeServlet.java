@@ -25,6 +25,6 @@ public class ExchangeServlet extends HttpServlet {
         var targetCurrency = req.getParameter("to");
         var amount = exchangeRateService.extractValue(req.getParameter("amount"));
         ExchangeRequestDto exchangeRequestDto = new ExchangeRequestDto(baseCurrency, targetCurrency, amount);
-        resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.exchangeByReverseRate(exchangeRequestDto)));
+        resp.getWriter().write(jsonMapper.dtoToJson(exchangeService.exchange(exchangeRequestDto)));
     }
 }

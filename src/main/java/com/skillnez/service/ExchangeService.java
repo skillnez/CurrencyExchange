@@ -27,22 +27,30 @@ public class ExchangeService {
     private ExchangeService() {
     }
 
-    public ExchangeResponseDto exchange (ExchangeRequestDto exchangeDto) {
+    public ExchangeResponseDto exchange(ExchangeRequestDto exchangeDto) {
         BigDecimal rate;
         BigDecimal convertedAmount;
         ExchangeRate exchangeRate =
                 exchangeRateDao.findExchangePairByCurrencyCodes(exchangeDto.baseCurrencyCode(), exchangeDto.targetCurrencyCode())
                         .orElseThrow(() -> new CurrencyNotFoundException("Exchange rate not found"));
-        //Сценарий прямого курса
+//        //Сценарий прямого курса
         rate = exchangeRate.getRate();
         convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
         //сценарий обратного курса
-        rate = getReverseRate(exchangeRate);
-        convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
+//        rate = getReverseRate(exchangeRate);
+//        convertedAmount = rate.multiply(exchangeDto.amount()).setScale(2, RoundingMode.HALF_EVEN);
         //сценарий кросс курса
         return new ExchangeResponseDto(
-                dtoMapper.convertToCurrencyResponseDto(currencyDao.findById(exchangeRate.getBaseCurrencyId()))
-        )
+                currencyDao.findById(exchangeRate.getBaseCurrencyId())
+                        .map(dtoMapper::convertToCurrencyResponseDto)
+                        .orElseThrow(CurrencyNotFoundException::new),
+                currencyDao.findById(exchangeRate.getTargetCurrencyId())
+                        .map(dtoMapper::convertToCurrencyResponseDto)
+                        .orElseThrow(CurrencyNotFoundException::new),
+                rate,
+                exchangeDto.amount(),
+                convertedAmount
+        );
     }
 
 
@@ -57,14 +65,8 @@ public class ExchangeService {
 //    }
 
 
-    public BigDecimal getReverseRate (ExchangeRate exchangeRate) {
+    private BigDecimal getReverseRate(ExchangeRate exchangeRate) {
         return BigDecimal.ONE.divide(exchangeRate.getRate(), MathContext.DECIMAL64).
                 setScale(6, RoundingMode.HALF_EVEN);
     }
-
-    public BigDecimal getDirectRate(ExchangeRate exchangeRate) {
-        return exchangeRate.getRate();
-    }
-
-
 }
