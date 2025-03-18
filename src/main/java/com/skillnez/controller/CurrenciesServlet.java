@@ -19,6 +19,10 @@ public class CurrenciesServlet extends HttpServlet {
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
 
+    public CurrenciesServlet() {
+        super();
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.getWriter().write(jsonMapper.listToJson(currencyService.findAll()));

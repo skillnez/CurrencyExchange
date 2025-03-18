@@ -15,6 +15,10 @@ public class CurrencyServlet extends HttpServlet {
     private final CurrencyService currencyService = CurrencyService.getINSTANCE();
     private final JsonMapper jsonMapper = new JsonMapper();
 
+    public CurrencyServlet() {
+        super();
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String currency = req.getPathInfo().substring(1);
