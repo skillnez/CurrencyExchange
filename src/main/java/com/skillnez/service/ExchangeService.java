@@ -17,7 +17,7 @@ import java.util.Optional;
 public class ExchangeService {
 
     public static final ExchangeService instance = new ExchangeService();
-    private static final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private static final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
     private final DtoMapper dtoMapper = new DtoMapper();
     private final String CROSS_RATE_CONSTANT_CURRENCY = "USD";

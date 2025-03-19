@@ -5,11 +5,12 @@ import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.Currency;
-import com.skillnez.utils.ConnectionManager;
+import com.skillnez.utils.ConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteErrorCode;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class CurrencyDao implements Dao<Integer, Currency> {
 
     private static final Logger logger = LogManager.getLogger(CurrencyDao.class);
+    private final DataSource dataSource;
 
     private static final String SAVE_SQL = """
             INSERT INTO Currencies (Code, FullName, Sign)
@@ -50,17 +52,18 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             WHERE Code = ?
             """;
 
-    private static final CurrencyDao INSTANCE = new CurrencyDao();
+    private static final CurrencyDao INSTANCE = new CurrencyDao(ConnectionPool.getDataSource());
 
     public static CurrencyDao getInstance() {
         return INSTANCE;
     }
 
-    private CurrencyDao() {
+    private CurrencyDao(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public Currency save(Currency currency) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
@@ -81,11 +84,10 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public boolean delete(Integer id) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setInt(1, id);
             return statement.executeUpdate() > 0;
-
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
             throw new DaoException("Error executing SQL query", e);
@@ -94,7 +96,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
 
     public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_ALL_SQL)) {
             var resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -108,7 +110,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Optional<Currency> findById(Integer id) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
             statement.setInt(1, id);
             var resultSet = statement.executeQuery();
@@ -124,7 +126,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Currency update(Currency currency) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
@@ -142,7 +144,7 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Optional<Currency> getCurrencyByCode(String code) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_BY_CODE_SQL)) {
             statement.setString(1, code);
             var resultSet = statement.executeQuery();

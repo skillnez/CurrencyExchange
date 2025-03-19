@@ -4,11 +4,12 @@ import com.skillnez.exceptions.CurrencyAlreadyExistException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.ExchangeRate;
-import com.skillnez.utils.ConnectionManager;
+import com.skillnez.utils.ConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteErrorCode;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
 
     private static final Logger logger = LogManager.getLogger(ExchangeRateDao.class);
+    private final DataSource dataSource;
 
     private final static String DELETE_SQL = """
             DELETE FROM ExchangeRates
@@ -64,15 +66,19 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             )
            \s""";
 
-    private final static ExchangeRateDao INSTANCE = new ExchangeRateDao();
+    private final static ExchangeRateDao INSTANCE = new ExchangeRateDao(ConnectionPool.getDataSource());
 
     public static ExchangeRateDao getInstance() {
         return INSTANCE;
     }
 
+    private ExchangeRateDao(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
     @Override
     public ExchangeRate update(ExchangeRate exchangeRate) {
-        try (var connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setInt(1, exchangeRate.getBaseCurrencyId());
             statement.setInt(2, exchangeRate.getTargetCurrencyId());
@@ -92,7 +98,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     @Override
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
-        try (var connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_ALL_SQL)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -109,7 +115,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
 
     @Override
     public boolean delete(Integer id) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setInt(1, id);
             return statement.executeUpdate() > 0;
@@ -121,7 +127,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
 
     @Override
     public ExchangeRate save(ExchangeRate exchangeRate) {
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, exchangeRate.getBaseCurrencyId());
             statement.setInt(2, exchangeRate.getTargetCurrencyId());
@@ -143,7 +149,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
 
     @Override
     public Optional<ExchangeRate> findById(Integer id) {
-        try (var connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
             statement.setInt(1, id);
             var resultSet = statement.executeQuery();
@@ -159,7 +165,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     }
 
     public Optional<ExchangeRate> findExchangePairByCurrencyId(int baseCurrencyId, int targetCurrencyId) {
-        try (var connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_BY_CURRENCY_ID_PAIR_SQL)) {
             statement.setInt(1, baseCurrencyId);
             statement.setInt(2, targetCurrencyId);
@@ -175,7 +181,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     }
 
     public Optional<ExchangeRate> findExchangePairByCurrencyCodes(String baseCode, String targetCode) {
-        try (var connection = ConnectionManager.open();
+        try (Connection connection = dataSource.getConnection();
              var statement = connection.prepareStatement(FIND_BY_CURRENCY_CODES_PAIR_SQL)) {
             statement.setString(1, baseCode);
             statement.setString(2, targetCode);
