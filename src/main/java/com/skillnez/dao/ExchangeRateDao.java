@@ -28,8 +28,6 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
     private final static String FIND_ALL_SQL = """
             SELECT * FROM ExchangeRates
             """;
-    //делаем синглтон
-    private final static ExchangeRateDao INSTANCE = new ExchangeRateDao();
     private final static String FIND_BY_ID_SQL = """
             SELECT * FROM ExchangeRates
             WHERE ID = ?
@@ -66,17 +64,10 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             )
            \s""";
 
+    private final static ExchangeRateDao INSTANCE = new ExchangeRateDao();
+
     public static ExchangeRateDao getInstance() {
         return INSTANCE;
-    }
-
-    private static ExchangeRate buildExchangeRate(ResultSet resultSet) throws SQLException {
-        return new ExchangeRate(
-                resultSet.getInt("ID"),
-                resultSet.getInt("BaseCurrencyId"),
-                resultSet.getInt("TargetCurrencyId"),
-                resultSet.getBigDecimal("Rate")
-        );
     }
 
     @Override
@@ -197,5 +188,14 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static ExchangeRate buildExchangeRate(ResultSet resultSet) throws SQLException {
+        return new ExchangeRate(
+                resultSet.getInt("ID"),
+                resultSet.getInt("BaseCurrencyId"),
+                resultSet.getInt("TargetCurrencyId"),
+                resultSet.getBigDecimal("Rate")
+        );
     }
 }

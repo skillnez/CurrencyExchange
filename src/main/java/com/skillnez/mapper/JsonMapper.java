@@ -14,8 +14,4 @@ public class JsonMapper {
     public String listToJson(Object list) throws JsonProcessingException {
         return mapper.writeValueAsString(list); // Преобразование списка в JSON
     }
-
-    public String stringToJson(String string) throws JsonProcessingException {
-        return mapper.writeValueAsString(string);
-    }
 }

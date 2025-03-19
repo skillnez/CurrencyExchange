@@ -5,14 +5,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnectionManager {
-    //вынесли параметры подключения в отдельные константы
     public final static String URL_KEY = "db.url";
 
     static {
         loadDriver();
     }
 
-    //пустой конструктор
     private ConnectionManager() {
     }
 
@@ -24,10 +22,8 @@ public class ConnectionManager {
         }
     }
 
-    // cоздаем свой метод для открытия соединения
     public static Connection open() {
         try {
-            // возвращаем подключение к URL при помощи стандартных методов JDBC
             return DriverManager.getConnection(
                     PropertiesUtil.get(URL_KEY)
             );

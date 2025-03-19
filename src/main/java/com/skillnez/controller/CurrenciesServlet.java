@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
@@ -19,21 +20,18 @@ public class CurrenciesServlet extends HttpServlet {
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
 
-    public CurrenciesServlet() {
-        super();
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.getWriter().write(jsonMapper.listToJson(currencyService.findAll()));
+        List<CurrencyResponseDto> allCurrencies = currencyService.findAll();
+        resp.getWriter().write(jsonMapper.listToJson(allCurrencies));
         resp.getWriter().flush();
         resp.getWriter().close();
     }
 
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        var code = req.getParameter("code");
-        var name = req.getParameter("name");
-        var sign = req.getParameter("sign");
+        String code = req.getParameter("code");
+        String name = req.getParameter("name");
+        String sign = req.getParameter("sign");
 
         CurrencyRequestDto currencyRequestDto = new CurrencyRequestDto(name, code, sign);
         validator.validate(currencyRequestDto);

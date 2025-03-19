@@ -7,7 +7,6 @@ import com.skillnez.exceptions.ExchangeRateNotFoundException;
 import com.skillnez.mapper.DtoMapper;
 import com.skillnez.model.dto.ExchangeRequestDto;
 import com.skillnez.model.dto.ExchangeResponseDto;
-import com.skillnez.model.entity.Currency;
 import com.skillnez.model.entity.ExchangeRate;
 
 import java.math.BigDecimal;
@@ -21,6 +20,7 @@ public class ExchangeService {
     private static final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
     private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
     private final DtoMapper dtoMapper = new DtoMapper();
+    private final String CROSS_RATE_CONSTANT_CURRENCY = "USD";
 
     public static ExchangeService getInstance() {
         return instance;
@@ -37,9 +37,9 @@ public class ExchangeService {
         Optional<ExchangeRate> reverseRate =
                 exchangeRateDao.findExchangePairByCurrencyCodes(exchangeDto.targetCurrencyCode(), exchangeDto.baseCurrencyCode());
         Optional<ExchangeRate> usdToBase =
-                exchangeRateDao.findExchangePairByCurrencyCodes("USD", exchangeDto.baseCurrencyCode());
+                exchangeRateDao.findExchangePairByCurrencyCodes(CROSS_RATE_CONSTANT_CURRENCY, exchangeDto.baseCurrencyCode());
         Optional<ExchangeRate> usdToTarget =
-                exchangeRateDao.findExchangePairByCurrencyCodes("USD", exchangeDto.targetCurrencyCode());
+                exchangeRateDao.findExchangePairByCurrencyCodes(CROSS_RATE_CONSTANT_CURRENCY, exchangeDto.targetCurrencyCode());
 
         if (exchangeRate.isPresent()) {
             rate = exchangeRate.orElseThrow(ExchangeRateNotFoundException::new)
@@ -69,8 +69,7 @@ public class ExchangeService {
         );
     }
 
-
-    public BigDecimal getCrossRate (ExchangeRate usdToTarget, ExchangeRate usdToBase) {
+    private BigDecimal getCrossRate (ExchangeRate usdToTarget, ExchangeRate usdToBase) {
         return usdToBase.getRate()
                 .divide(usdToTarget.getRate(), MathContext.DECIMAL64).setScale(6, RoundingMode.HALF_EVEN);
     }

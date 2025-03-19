@@ -49,32 +49,27 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             SELECT * FROM Currencies
             WHERE Code = ?
             """;
-    //сделал класс синглтоном
+
     private static final CurrencyDao INSTANCE = new CurrencyDao();
-
-    private CurrencyDao() {
-    }
-
-    private static Currency buildCurrency(ResultSet resultSet) throws SQLException {
-        return new Currency(resultSet.getInt("ID"), resultSet.getString("Code"), resultSet.getString("FullName"), resultSet.getString("Sign"));
-    }
 
     public static CurrencyDao getInstance() {
         return INSTANCE;
     }
 
+    private CurrencyDao() {
+    }
+
     public Currency save(Currency currency) {
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
             statement.setString(3, currency.getSign());
             statement.executeUpdate();
-            //назначаем в SQL запрос вместо "?" значения нашей валюты, которые надо сохранить
             var keys = statement.getGeneratedKeys();
             if (keys.next()) {
                 currency.setId(keys.getInt(1));
             }
-            //Заполняем у валюты ID, который ранее был автоматически сгенерирован
             return currency;
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
@@ -86,7 +81,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public boolean delete(Integer id) {
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(DELETE_SQL)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setInt(1, id);
             return statement.executeUpdate() > 0;
 
@@ -98,7 +94,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
 
     public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(FIND_ALL_SQL)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_ALL_SQL)) {
             var resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 currencies.add(buildCurrency(resultSet));
@@ -111,7 +108,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Optional<Currency> findById(Integer id) {
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
             statement.setInt(1, id);
             var resultSet = statement.executeQuery();
             Currency currency = null;
@@ -126,16 +124,16 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Currency update(Currency currency) {
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(UPDATE_SQL)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getFullName());
             statement.setString(3, currency.getSign());
             statement.setInt(4, currency.getId());
             int affectedRows = statement.executeUpdate();
-            if (affectedRows ==0) {
+            if (affectedRows == 0) {
                 throw new IncorrectRequestException("Can't update Currency");
-            } else
-                return currency;
+            } else return currency;
 
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
@@ -144,7 +142,8 @@ public class CurrencyDao implements Dao<Integer, Currency> {
     }
 
     public Optional<Currency> getCurrencyByCode(String code) {
-        try (Connection connection = ConnectionManager.open(); var statement = connection.prepareStatement(FIND_BY_CODE_SQL)) {
+        try (Connection connection = ConnectionManager.open();
+             var statement = connection.prepareStatement(FIND_BY_CODE_SQL)) {
             statement.setString(1, code);
             var resultSet = statement.executeQuery();
             Currency currency;
@@ -153,11 +152,18 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             } else {
                 throw new CurrencyNotFoundException("Error executing SQL query");
             }
-            return Optional.of(currency);
+            return Optional.ofNullable(currency);
         } catch (SQLException e) {
             logger.error("Error executing SQL query: {}", e.getMessage(), e);
             throw new DaoException("Error executing SQL query", e);
         }
+    }
+
+    private static Currency buildCurrency(ResultSet resultSet) throws SQLException {
+        return new Currency(resultSet.getInt("ID"),
+                resultSet.getString("Code"),
+                resultSet.getString("FullName"),
+                resultSet.getString("Sign"));
     }
 }
 

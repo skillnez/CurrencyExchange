@@ -31,7 +31,8 @@ public class CurrencyService {
     }
 
     public CurrencyResponseDto findByCode(String code) throws CurrencyNotFoundException, DaoException {
-        Currency currency = currencyDao.getCurrencyByCode(code).orElseThrow(CurrencyNotFoundException::new);
+        Currency currency = currencyDao.getCurrencyByCode(code)
+                .orElseThrow(() -> new CurrencyNotFoundException("Currency with code " + code + " not found"));
         return new CurrencyResponseDto(currency.getId(),currency.getFullName(), currency.getCode(), currency.getSign());
     }
 

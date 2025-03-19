@@ -1,6 +1,5 @@
 package com.skillnez.controller;
 
-import com.skillnez.mapper.DtoMapper;
 import com.skillnez.mapper.JsonMapper;
 import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
@@ -13,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
@@ -20,7 +20,6 @@ public class ExchangeRateServlet extends HttpServlet {
     private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
-    private final DtoMapper dtoMapper = new DtoMapper();
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -32,25 +31,23 @@ public class ExchangeRateServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        var baseCurrencyCode = exchangeRateService.extractBaseCurrencyCode(req.getPathInfo());
-        var targetCurrencyCode = exchangeRateService.extractTargetCurrencyCode(req.getPathInfo());
-        ExchangeRateResponseDto exchangeRateResponseDto =
-                exchangeRateService.getExchangeRateByCodes(baseCurrencyCode, targetCurrencyCode);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String baseCurrencyCode = exchangeRateService.extractBaseCurrencyCode(req.getPathInfo());
+        String targetCurrencyCode = exchangeRateService.extractTargetCurrencyCode(req.getPathInfo());
+        ExchangeRateResponseDto exchangeRateResponseDto = exchangeRateService.getExchangeRateDtoByCodes(baseCurrencyCode, targetCurrencyCode);
         resp.getWriter().write(jsonMapper.dtoToJson(exchangeRateResponseDto));
     }
 
     @Override
-    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-        var baseCurrencyCode = exchangeRateService.extractBaseCurrencyCode(req.getPathInfo());
-        var targetCurrencyCode = exchangeRateService.extractTargetCurrencyCode(req.getPathInfo());
-        String parameter = req.getReader().readLine();
-        var rate = exchangeRateService.extractValue(parameter);
-
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String baseCurrencyCode = exchangeRateService.extractBaseCurrencyCode(req.getPathInfo());
+        String targetCurrencyCode = exchangeRateService.extractTargetCurrencyCode(req.getPathInfo());
+        String rateRequestParameter = req.getReader().readLine();
+        BigDecimal rate = exchangeRateService.extractValue(rateRequestParameter);
         ExchangeRateRequestDto exchangeRateRequestDto = new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
         validator.validate(exchangeRateRequestDto);
-        resp.getWriter().write(jsonMapper.dtoToJson(exchangeRateService.update(exchangeRateRequestDto)));
+        ExchangeRateResponseDto updateResponse = exchangeRateService.update(exchangeRateRequestDto);
+        resp.getWriter().write(jsonMapper.dtoToJson(updateResponse));
     }
 
 }

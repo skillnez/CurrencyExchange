@@ -31,7 +31,7 @@ public class ErrorFilter extends HttpFilter {
             writeError(resp, errorMessage);
         } catch (CurrencyNotFoundException e) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            errorMessage = "Currency not found";
+            errorMessage = e.getMessage();
             writeError(resp, errorMessage);
         } catch (IncorrectRequestException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -39,6 +39,8 @@ public class ErrorFilter extends HttpFilter {
         } catch (CurrencyAlreadyExistException e) {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
             writeError(resp, e.getMessage());
+        } catch (ExchangeRateNotFoundException e) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 

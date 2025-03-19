@@ -15,12 +15,12 @@ public class Validator {
 
     private static final int MAX_CURRENCY_CODE_LENGTH = 3;
     private static final int MAX_NAME_LENGTH = 25;
-    private static final int MAX_SIGN_LENGTH = 8;
+    private static final int MAX_SIGN_LENGTH = 2;
 
     public void validate(CurrencyRequestDto requestDto) {
         validateField("code", requestDto.code(), MAX_CURRENCY_CODE_LENGTH);
         validateField("name", requestDto.name(), MAX_NAME_LENGTH);
-        validateField("sign", requestDto.sign(), 1);
+        validateField("sign", requestDto.sign(), MAX_SIGN_LENGTH);
     }
 
     public void validate (ExchangeRateRequestDto requestDto) {
