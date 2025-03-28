@@ -3,6 +3,7 @@ package com.skillnez.controller;
 import com.skillnez.mapper.JsonMapper;
 import com.skillnez.model.dto.CurrencyResponseDto;
 import com.skillnez.service.CurrencyService;
+import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +13,10 @@ import java.io.IOException;
 
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
-    private final CurrencyService currencyService = CurrencyService.getINSTANCE();
+
+    @Inject
+    private CurrencyService currencyService;
+
     private final JsonMapper jsonMapper = new JsonMapper();
 
     @Override

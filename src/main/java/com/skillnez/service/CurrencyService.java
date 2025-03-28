@@ -6,21 +6,16 @@ import com.skillnez.exceptions.DaoException;
 import com.skillnez.model.dto.CurrencyRequestDto;
 import com.skillnez.model.dto.CurrencyResponseDto;
 import com.skillnez.model.entity.Currency;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.List;
 
+@ApplicationScoped
 public class CurrencyService {
 
-    public static final CurrencyService INSTANCE = new CurrencyService();
-    private final CurrencyDao currencyDao = CurrencyDao.getInstance();
-
-    private CurrencyService() {
-    }
-
-    public static CurrencyService getINSTANCE() {
-        return INSTANCE;
-    }
-
+    @Inject
+    private CurrencyDao currencyDao;
 
     public List<CurrencyResponseDto> findAll() throws DaoException {
         return currencyDao.findAll().stream().map(currency -> new CurrencyResponseDto(

@@ -12,28 +12,33 @@ import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.model.entity.Currency;
 import com.skillnez.model.entity.ExchangeRate;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@ApplicationScoped
 public class ExchangeRateService {
 
-    public static final ExchangeRateService INSTANCE = new ExchangeRateService();
-    private final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
+    private ExchangeRateDao exchangeRateDao;
+    private CurrencyDao currencyDao;
+
+    public ExchangeRateService() {
+    }
+
+    @Inject
+    public ExchangeRateService (ExchangeRateDao exchangeRateDao, CurrencyDao currencyDao) {
+        this.exchangeRateDao = exchangeRateDao;
+        this.currencyDao = currencyDao;
+    }
+
     private final DtoMapper dtoMapper = new DtoMapper();
-    private final CurrencyDao currencyDao = CurrencyDao.getInstance();
-
-    private ExchangeRateService() {
-    }
-
-    public static ExchangeRateService getInstance() {
-        return INSTANCE;
-    }
 
     public List<ExchangeRateResponseDto> getAllExchangeRates() throws DaoException {
-        return exchangeRateDao.findAll().stream().map(this::ConvertToExchangeRateDto).toList();
+        return exchangeRateDao.findAll().stream().map(this::convertToExchangeRateDto).toList();
     }
 
     public ExchangeRateResponseDto save (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
@@ -41,13 +46,13 @@ public class ExchangeRateService {
         int targetCurrencyId = getCurrencyIdByCode(exchangeRateRequestDto.targetCurrency());
             ExchangeRate exchangeRate = exchangeRateDao.save(
                     new ExchangeRate(baseCurrencyId, targetCurrencyId, exchangeRateRequestDto.rate()));
-            return ConvertToExchangeRateDto(exchangeRate);
+            return convertToExchangeRateDto(exchangeRate);
     }
 
     public ExchangeRateResponseDto update (ExchangeRateRequestDto exchangeRateRequestDto) throws DaoException {
         ExchangeRate exchangeRate = getExchangeRate(exchangeRateRequestDto);
         exchangeRate.setRate(exchangeRateRequestDto.rate());
-        return ConvertToExchangeRateDto(exchangeRateDao.update(exchangeRate));
+        return convertToExchangeRateDto(exchangeRateDao.update(exchangeRate));
     }
 
     public BigDecimal extractValue (String value) {
@@ -67,7 +72,7 @@ public class ExchangeRateService {
 
     public ExchangeRateResponseDto getExchangeRateDtoByCodes(String baseCurrencyCode, String targetCurrencyCode) throws DaoException {
         ExchangeRate exchangeRate = getExchangeRate(baseCurrencyCode, targetCurrencyCode);
-        return ConvertToExchangeRateDto(exchangeRate);
+        return convertToExchangeRateDto(exchangeRate);
     }
 
     public String extractBaseCurrencyCode(String currencyPair) {
@@ -86,7 +91,7 @@ public class ExchangeRateService {
         }
     }
 
-    private ExchangeRateResponseDto ConvertToExchangeRateDto(ExchangeRate exchangeRate) throws DaoException {
+    private ExchangeRateResponseDto convertToExchangeRateDto(ExchangeRate exchangeRate) throws DaoException {
         Currency baseCurrency = getCurrencyById(exchangeRate.getBaseCurrencyId());
         Currency targetCurrency = getCurrencyById(exchangeRate.getTargetCurrencyId());
         CurrencyResponseDto baseCurrencyDto = dtoMapper.convertToCurrencyResponseDto(baseCurrency);

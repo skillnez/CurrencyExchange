@@ -5,7 +5,11 @@ import com.skillnez.exceptions.CurrencyNotFoundException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.Currency;
-import com.skillnez.utils.ConnectionPool;
+import com.skillnez.utils.AppContextListener;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteErrorCode;
@@ -19,11 +23,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
+@ApplicationScoped
 public class CurrencyDao implements Dao<Integer, Currency> {
 
+    @Inject
+    private ServletContext servletContext;
+    private DataSource dataSource;
+
+    @PostConstruct
+    public void init() {
+        dataSource = (DataSource) servletContext.getAttribute("dataSource");
+    }
+
     private static final Logger logger = LogManager.getLogger(CurrencyDao.class);
-    private final DataSource dataSource;
 
     private static final String SAVE_SQL = """
             INSERT INTO Currencies (Code, FullName, Sign)
@@ -51,16 +63,6 @@ public class CurrencyDao implements Dao<Integer, Currency> {
             SELECT * FROM Currencies
             WHERE Code = ?
             """;
-
-    private static final CurrencyDao INSTANCE = new CurrencyDao(ConnectionPool.getDataSource());
-
-    public static CurrencyDao getInstance() {
-        return INSTANCE;
-    }
-
-    private CurrencyDao(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
 
     public Currency save(Currency currency) {
         try (Connection connection = dataSource.getConnection();

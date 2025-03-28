@@ -4,7 +4,11 @@ import com.skillnez.exceptions.CurrencyAlreadyExistException;
 import com.skillnez.exceptions.DaoException;
 import com.skillnez.exceptions.IncorrectRequestException;
 import com.skillnez.model.entity.ExchangeRate;
-import com.skillnez.utils.ConnectionPool;
+import com.skillnez.utils.AppContextListener;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteErrorCode;
@@ -18,10 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
 
+    @Inject
+    private ServletContext servletContext;
+    private DataSource dataSource;
+
+    @PostConstruct
+    public void init() {
+        dataSource = (DataSource) servletContext.getAttribute("dataSource");
+    }
+
     private static final Logger logger = LogManager.getLogger(ExchangeRateDao.class);
-    private final DataSource dataSource;
 
     private final static String DELETE_SQL = """
             DELETE FROM ExchangeRates
@@ -39,7 +52,7 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
             SET BaseCurrencyId = ?, TargetCurrencyId = ?, Rate = ?
             WHERE ID = ?
             """;
-    public final String SAVE_SQL = """
+    public final static String SAVE_SQL = """
             INSERT INTO ExchangeRates (basecurrencyid, targetcurrencyid, rate)
             VALUES (?, ?, ?)
             """;
@@ -65,16 +78,6 @@ public class ExchangeRateDao implements Dao<Integer, ExchangeRate> {
                 e.TargetCurrencyId = (SELECT c2.id FROM Currencies c2 WHERE c2.Code = ?)
             )
            \s""";
-
-    private final static ExchangeRateDao INSTANCE = new ExchangeRateDao(ConnectionPool.getDataSource());
-
-    public static ExchangeRateDao getInstance() {
-        return INSTANCE;
-    }
-
-    private ExchangeRateDao(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
 
     @Override
     public ExchangeRate update(ExchangeRate exchangeRate) {

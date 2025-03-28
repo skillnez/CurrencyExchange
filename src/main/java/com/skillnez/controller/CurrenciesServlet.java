@@ -6,6 +6,7 @@ import com.skillnez.model.dto.CurrencyResponseDto;
 import com.skillnez.model.entity.Currency;
 import com.skillnez.service.CurrencyService;
 import com.skillnez.utils.Validator;
+import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +17,10 @@ import java.util.List;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
-    private final CurrencyService currencyService = CurrencyService.getINSTANCE();
+
+    @Inject
+    private CurrencyService currencyService;
+
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
 

@@ -5,6 +5,7 @@ import com.skillnez.model.dto.ExchangeRequestDto;
 import com.skillnez.model.dto.ExchangeResponseDto;
 import com.skillnez.service.ExchangeRateService;
 import com.skillnez.service.ExchangeService;
+import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +17,12 @@ import java.math.BigDecimal;
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
 
-    ExchangeService exchangeService = ExchangeService.getInstance();
-    ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
-    JsonMapper jsonMapper = new JsonMapper();
+    @Inject
+    private ExchangeRateService exchangeRateService;
+    @Inject
+    private ExchangeService exchangeService;
+
+    private final JsonMapper jsonMapper = new JsonMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

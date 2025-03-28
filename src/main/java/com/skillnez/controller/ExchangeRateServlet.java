@@ -5,6 +5,7 @@ import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.service.ExchangeRateService;
 import com.skillnez.utils.Validator;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,7 +18,8 @@ import java.math.BigDecimal;
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
 
-    private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
+    @Inject
+    private ExchangeRateService exchangeRateService;
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
 
@@ -38,7 +40,6 @@ public class ExchangeRateServlet extends HttpServlet {
         resp.getWriter().write(jsonMapper.dtoToJson(exchangeRateResponseDto));
     }
 
-    @Override
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String baseCurrencyCode = exchangeRateService.extractBaseCurrencyCode(req.getPathInfo());
         String targetCurrencyCode = exchangeRateService.extractTargetCurrencyCode(req.getPathInfo());

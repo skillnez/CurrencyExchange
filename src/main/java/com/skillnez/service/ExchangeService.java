@@ -8,26 +8,31 @@ import com.skillnez.mapper.DtoMapper;
 import com.skillnez.model.dto.ExchangeRequestDto;
 import com.skillnez.model.dto.ExchangeResponseDto;
 import com.skillnez.model.entity.ExchangeRate;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Optional;
 
+@ApplicationScoped
 public class ExchangeService {
 
-    public static final ExchangeService instance = new ExchangeService();
-    private static final ExchangeRateDao exchangeRateDao = ExchangeRateDao.getInstance();
-    private static final CurrencyDao currencyDao = CurrencyDao.getInstance();
+    private ExchangeRateDao exchangeRateDao;
+    private CurrencyDao currencyDao;
+
+    public ExchangeService() {
+    }
+
+    @Inject
+    public ExchangeService(CurrencyDao currencyDao, ExchangeRateDao exchangeRateDao) {
+        this.currencyDao = currencyDao;
+        this.exchangeRateDao = exchangeRateDao;
+    }
+
     private final DtoMapper dtoMapper = new DtoMapper();
     private final String CROSS_RATE_CONSTANT_CURRENCY = "USD";
-
-    public static ExchangeService getInstance() {
-        return instance;
-    }
-
-    private ExchangeService() {
-    }
 
     public ExchangeResponseDto exchange(ExchangeRequestDto exchangeDto) {
         BigDecimal rate = BigDecimal.ZERO;

@@ -5,6 +5,7 @@ import com.skillnez.model.dto.ExchangeRateRequestDto;
 import com.skillnez.model.dto.ExchangeRateResponseDto;
 import com.skillnez.service.ExchangeRateService;
 import com.skillnez.utils.Validator;
+import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +18,8 @@ import java.util.List;
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends HttpServlet {
 
-    private final ExchangeRateService exchangeRateService = ExchangeRateService.getInstance();
+    @Inject
+    private ExchangeRateService exchangeRateService;
     private final JsonMapper jsonMapper = new JsonMapper();
     private final Validator validator = new Validator();
 
